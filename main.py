@@ -19,7 +19,7 @@ conn_str = (
 )
 
 def get_connection():
-    return pyodbc.connect(conn_str)
+    return pyodbc.connect(conn_str, timeout=5)
 
 @app.post("/login-insecure")
 def login_insecure(data: LoginRequest):
@@ -30,7 +30,8 @@ def login_insecure(data: LoginRequest):
     try:
         cursor.execute(query)
         rows = cursor.fetchall()
-        return {"variant": "insecure", "status": "success" if rows else "failed", "rows": len(rows)}
+        result_list = [{"id": r.id, "username": r.username, "password": r.password, "role": r.role} for r in rows]
+        return {"variant": "insecure", "results": len(rows), "data": result_list}
     except Exception:
         return {"variant": "insecure", "status": "error"}
     finally:
@@ -45,7 +46,8 @@ def login_partial(data: LoginRequest):
     try:
         cursor.execute(query, (data.username,))
         rows = cursor.fetchall()
-        return {"variant": "partial", "status": "success" if rows else "failed", "rows": len(rows)}
+        result_list = [{"id": r.id, "username": r.username, "password": r.password, "role": r.role} for r in rows]
+        return {"variant": "partial", "results": len(rows), "data": result_list}
     except Exception:
         return {"variant": "partial", "status": "error"}
     finally:
@@ -60,7 +62,8 @@ def login_secure(data: LoginRequest):
     try:
         cursor.execute(query, (data.username, data.password))
         rows = cursor.fetchall()
-        return {"variant": "secure", "status": "success" if rows else "failed", "rows": len(rows)}
+        result_list = [{"id": r.id, "username": r.username, "password": r.password, "role": r.role} for r in rows]
+        return {"variant": "secure", "results": len(rows), "data": result_list}
     except Exception:
         return {"variant": "secure", "status": "error"}
     finally:
@@ -75,7 +78,8 @@ def search_insecure(data: SearchRequest):
     try:
         cursor.execute(query)
         rows = cursor.fetchall()
-        return {"variant": "insecure", "results": len(rows)}
+        result_list = [{"id": r.id, "username": r.username, "role": r.role} for r in rows]
+        return {"variant": "insecure", "results": len(rows), "data": result_list}
     except Exception:
         return {"variant": "insecure", "status": "error"}
     finally:
@@ -90,12 +94,12 @@ def search_partial(data: SearchRequest):
     try:
         cursor.execute(query)
         rows = cursor.fetchall()
-        return {"variant": "partial", "results": len(rows)}
+        result_list = [{"id": r.id, "username": r.username, "role": r.role} for r in rows]
+        return {"variant": "partial", "results": len(rows), "data": result_list}
     except Exception:
         return {"variant": "partial", "status": "error"}
     finally:
         conn.close()
-
 
 @app.post("/search-secure")
 def search_secure(data: SearchRequest):
@@ -106,7 +110,8 @@ def search_secure(data: SearchRequest):
     try:
         cursor.execute(query, (f"%{data.query}%",))
         rows = cursor.fetchall()
-        return {"variant": "secure", "results": len(rows)}
+        result_list = [{"id": r.id, "username": r.username, "role": r.role} for r in rows]
+        return {"variant": "secure", "results": len(rows), "data": result_list}
     except Exception:
         return {"variant": "secure", "status": "error"}
     finally:
