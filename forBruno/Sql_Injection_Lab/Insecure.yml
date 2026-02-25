@@ -4,15 +4,15 @@ info:
   seq: 1
 
 http:
-  method: GET
-  url: http://127.0.0.1:8010/login-insecure?username=admin&password=admin123
-  params:
-    - name: username
-      value: admin
-      type: query
-    - name: password
-      value: admin123
-      type: query
+  method: POST
+  url: http://127.0.0.1:8010/login-insecure
+  body:
+    type: json
+    data: |-
+      {
+        "username": "admin",
+        "password": "admin123"
+      }
   auth: inherit
 
 settings:

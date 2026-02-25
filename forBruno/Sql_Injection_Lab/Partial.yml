@@ -4,8 +4,15 @@ info:
   seq: 3
 
 http:
-  method: GET
+  method: POST
   url: http://127.0.0.1:8010/login-partial
+  body:
+    type: json
+    data: |-
+      {
+        "username": "admin",
+        "password": "admin123"
+      }
   auth: inherit
 
 settings:

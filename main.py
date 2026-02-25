@@ -1,7 +1,12 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 import pyodbc
 
 app = FastAPI()
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
 
 conn_str = (
     "DRIVER={ODBC Driver 17 for SQL Server};"
@@ -14,49 +19,79 @@ def get_connection():
     return pyodbc.connect(conn_str)
 
 
-@app.get("/login-insecure")
-def login_insecure(username: str, password: str):
+@app.post("/login-insecure")
+def login_insecure(data: LoginRequest):
     conn = get_connection()
     cursor = conn.cursor()
 
-    query = f"SELECT * FROM Users WHERE username = '{username}' AND password = '{password}'"
+    query = f"""
+        SELECT * FROM Users
+        WHERE username = '{data.username}'
+        AND password = '{data.password}'
+    """
+
     print("INSECURE QUERY:", query)
 
     try:
         cursor.execute(query)
         rows = cursor.fetchall()
-        return {"status": "success" if rows else "failed", "rows": len(rows)}
-    except Exception as e:
-        return {"error": str(e)}
+        return {
+            "variant": "insecure",
+            "status": "success" if rows else "failed",
+            "rows_returned": len(rows)
+        }
+    except Exception:
+        return {"variant": "insecure", "status": "error"}
+    finally:
+        conn.close()
 
-
-@app.get("/login-partial")
-def login_partial(username: str, password: str):
+@app.post("/login-partial")
+def login_partial(data: LoginRequest):
     conn = get_connection()
     cursor = conn.cursor()
 
-    query = "SELECT * FROM Users WHERE username = ? AND password = '" + password + "'"
+    query = """
+        SELECT * FROM Users
+        WHERE username = ?
+        AND password = '""" + data.password + "'"
+
     print("PARTIAL QUERY:", query)
 
     try:
-        cursor.execute(query, (username,))
+        cursor.execute(query, (data.username,))
         rows = cursor.fetchall()
-        return {"status": "success" if rows else "failed", "rows": len(rows)}
-    except Exception as e:
-        return {"error": str(e)}
+        return {
+            "variant": "partial",
+            "status": "success" if rows else "failed",
+            "rows_returned": len(rows)
+        }
+    except Exception:
+        return {"variant": "partial", "status": "error"}
+    finally:
+        conn.close()
 
-
-@app.get("/login-secure")
-def login_secure(username: str, password: str):
+@app.post("/login-secure")
+def login_secure(data: LoginRequest):
     conn = get_connection()
     cursor = conn.cursor()
 
-    query = "SELECT * FROM Users WHERE username = ? AND password = ?"
+    query = """
+        SELECT * FROM Users
+        WHERE username = ?
+        AND password = ?
+    """
+
     print("SECURE QUERY: Prepared Statement Used")
 
     try:
-        cursor.execute(query, (username, password))
+        cursor.execute(query, (data.username, data.password))
         rows = cursor.fetchall()
-        return {"status": "success" if rows else "failed", "rows": len(rows)}
-    except Exception as e:
-        return {"error": str(e)}
+        return {
+            "variant": "secure",
+            "status": "success" if rows else "failed",
+            "rows_returned": len(rows)
+        }
+    except Exception:
+        return {"variant": "secure", "status": "error"}
+    finally:
+        conn.close()
