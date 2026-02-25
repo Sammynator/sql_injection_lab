@@ -29,7 +29,16 @@
         "kind": 6,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "class LoginRequest(BaseModel):\n    username: str\n    password: str\nconn_str = (\n    \"DRIVER={ODBC Driver 17 for SQL Server};\"\n    \"SERVER=(localdb)\\MSSQLLocalDB;\"\n    \"DATABASE=SqlInjectionLab;\"\n    \"Trusted_Connection=yes;\"\n)\ndef get_connection():",
+        "peekOfCode": "class LoginRequest(BaseModel):\n    username: str\n    password: str\nclass SearchRequest(BaseModel):\n    query: str\nconn_str = (\n    \"DRIVER={ODBC Driver 17 for SQL Server};\"\n    \"SERVER=(localdb)\\\\MSSQLLocalDB;\"\n    \"DATABASE=SqlInjectionLab;\"\n    \"Trusted_Connection=yes;\"",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "SearchRequest",
+        "kind": 6,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "class SearchRequest(BaseModel):\n    query: str\nconn_str = (\n    \"DRIVER={ODBC Driver 17 for SQL Server};\"\n    \"SERVER=(localdb)\\\\MSSQLLocalDB;\"\n    \"DATABASE=SqlInjectionLab;\"\n    \"Trusted_Connection=yes;\"\n)\ndef get_connection():\n    return pyodbc.connect(conn_str)",
         "detail": "main",
         "documentation": {}
     },
@@ -38,7 +47,7 @@
         "kind": 2,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "def get_connection():\n    return pyodbc.connect(conn_str)\n@app.post(\"/login-insecure\")\ndef login_insecure(data: LoginRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = f\"\"\"\n        SELECT * FROM Users\n        WHERE username = '{data.username}'\n        AND password = '{data.password}'",
+        "peekOfCode": "def get_connection():\n    return pyodbc.connect(conn_str)\n@app.post(\"/login-insecure\")\ndef login_insecure(data: LoginRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = f\"SELECT * FROM Users WHERE username = '{data.username}' AND password = '{data.password}'\"\n    print(\"INSECURE QUERY:\", query)\n    try:\n        cursor.execute(query)",
         "detail": "main",
         "documentation": {}
     },
@@ -47,7 +56,7 @@
         "kind": 2,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "def login_insecure(data: LoginRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = f\"\"\"\n        SELECT * FROM Users\n        WHERE username = '{data.username}'\n        AND password = '{data.password}'\n    \"\"\"\n    print(\"INSECURE QUERY:\", query)\n    try:",
+        "peekOfCode": "def login_insecure(data: LoginRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = f\"SELECT * FROM Users WHERE username = '{data.username}' AND password = '{data.password}'\"\n    print(\"INSECURE QUERY:\", query)\n    try:\n        cursor.execute(query)\n        rows = cursor.fetchall()\n        return {\"variant\": \"insecure\", \"status\": \"success\" if rows else \"failed\", \"rows\": len(rows)}\n    except Exception:",
         "detail": "main",
         "documentation": {}
     },
@@ -56,7 +65,7 @@
         "kind": 2,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "def login_partial(data: LoginRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = \"\"\"\n        SELECT * FROM Users\n        WHERE username = ?\n        AND password = '\"\"\" + data.password + \"'\"\n    print(\"PARTIAL QUERY:\", query)\n    try:\n        cursor.execute(query, (data.username,))",
+        "peekOfCode": "def login_partial(data: LoginRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = \"SELECT * FROM Users WHERE username = ? AND password = '\" + data.password + \"'\"\n    print(\"PARTIAL QUERY:\", query)\n    try:\n        cursor.execute(query, (data.username,))\n        rows = cursor.fetchall()\n        return {\"variant\": \"partial\", \"status\": \"success\" if rows else \"failed\", \"rows\": len(rows)}\n    except Exception:",
         "detail": "main",
         "documentation": {}
     },
@@ -65,7 +74,34 @@
         "kind": 2,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "def login_secure(data: LoginRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = \"\"\"\n        SELECT * FROM Users\n        WHERE username = ?\n        AND password = ?\n    \"\"\"\n    print(\"SECURE QUERY: Prepared Statement Used\")\n    try:",
+        "peekOfCode": "def login_secure(data: LoginRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = \"SELECT * FROM Users WHERE username = ? AND password = ?\"\n    print(\"SECURE QUERY: Prepared Statement Used\")\n    try:\n        cursor.execute(query, (data.username, data.password))\n        rows = cursor.fetchall()\n        return {\"variant\": \"secure\", \"status\": \"success\" if rows else \"failed\", \"rows\": len(rows)}\n    except Exception:",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "search_insecure",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def search_insecure(data: SearchRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = f\"SELECT id, username, role FROM Users WHERE username LIKE '%{data.query}%'\"\n    print(\"INSECURE SEARCH QUERY:\", query)\n    try:\n        cursor.execute(query)\n        rows = cursor.fetchall()\n        return {\"variant\": \"insecure\", \"results\": len(rows)}\n    except Exception:",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "search_partial",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def search_partial(data: SearchRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = \"SELECT id, username, role FROM Users WHERE username LIKE '%\" + data.query + \"%'\"\n    print(\"PARTIAL SEARCH QUERY:\", query)\n    try:\n        cursor.execute(query)\n        rows = cursor.fetchall()\n        return {\"variant\": \"partial\", \"results\": len(rows)}\n    except Exception:",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "search_secure",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def search_secure(data: SearchRequest):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = \"SELECT id, username, role FROM Users WHERE username LIKE ?\"\n    print(\"SECURE SEARCH QUERY: Prepared Statement Used\")\n    try:\n        cursor.execute(query, (f\"%{data.query}%\",))\n        rows = cursor.fetchall()\n        return {\"variant\": \"secure\", \"results\": len(rows)}\n    except Exception:",
         "detail": "main",
         "documentation": {}
     },
@@ -74,7 +110,7 @@
         "kind": 5,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "app = FastAPI()\nclass LoginRequest(BaseModel):\n    username: str\n    password: str\nconn_str = (\n    \"DRIVER={ODBC Driver 17 for SQL Server};\"\n    \"SERVER=(localdb)\\MSSQLLocalDB;\"\n    \"DATABASE=SqlInjectionLab;\"\n    \"Trusted_Connection=yes;\"\n)",
+        "peekOfCode": "app = FastAPI()\nclass LoginRequest(BaseModel):\n    username: str\n    password: str\nclass SearchRequest(BaseModel):\n    query: str\nconn_str = (\n    \"DRIVER={ODBC Driver 17 for SQL Server};\"\n    \"SERVER=(localdb)\\\\MSSQLLocalDB;\"\n    \"DATABASE=SqlInjectionLab;\"",
         "detail": "main",
         "documentation": {}
     },
@@ -83,7 +119,7 @@
         "kind": 5,
         "importPath": "main",
         "description": "main",
-        "peekOfCode": "conn_str = (\n    \"DRIVER={ODBC Driver 17 for SQL Server};\"\n    \"SERVER=(localdb)\\MSSQLLocalDB;\"\n    \"DATABASE=SqlInjectionLab;\"\n    \"Trusted_Connection=yes;\"\n)\ndef get_connection():\n    return pyodbc.connect(conn_str)\n@app.post(\"/login-insecure\")\ndef login_insecure(data: LoginRequest):",
+        "peekOfCode": "conn_str = (\n    \"DRIVER={ODBC Driver 17 for SQL Server};\"\n    \"SERVER=(localdb)\\\\MSSQLLocalDB;\"\n    \"DATABASE=SqlInjectionLab;\"\n    \"Trusted_Connection=yes;\"\n)\ndef get_connection():\n    return pyodbc.connect(conn_str)\n@app.post(\"/login-insecure\")\ndef login_insecure(data: LoginRequest):",
         "detail": "main",
         "documentation": {}
     }

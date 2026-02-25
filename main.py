@@ -8,9 +8,12 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
+class SearchRequest(BaseModel):
+    query: str
+
 conn_str = (
     "DRIVER={ODBC Driver 17 for SQL Server};"
-    "SERVER=(localdb)\MSSQLLocalDB;"
+    "SERVER=(localdb)\\MSSQLLocalDB;"
     "DATABASE=SqlInjectionLab;"
     "Trusted_Connection=yes;"
 )
@@ -18,28 +21,16 @@ conn_str = (
 def get_connection():
     return pyodbc.connect(conn_str)
 
-
 @app.post("/login-insecure")
 def login_insecure(data: LoginRequest):
     conn = get_connection()
     cursor = conn.cursor()
-
-    query = f"""
-        SELECT * FROM Users
-        WHERE username = '{data.username}'
-        AND password = '{data.password}'
-    """
-
+    query = f"SELECT * FROM Users WHERE username = '{data.username}' AND password = '{data.password}'"
     print("INSECURE QUERY:", query)
-
     try:
         cursor.execute(query)
         rows = cursor.fetchall()
-        return {
-            "variant": "insecure",
-            "status": "success" if rows else "failed",
-            "rows_returned": len(rows)
-        }
+        return {"variant": "insecure", "status": "success" if rows else "failed", "rows": len(rows)}
     except Exception:
         return {"variant": "insecure", "status": "error"}
     finally:
@@ -49,22 +40,12 @@ def login_insecure(data: LoginRequest):
 def login_partial(data: LoginRequest):
     conn = get_connection()
     cursor = conn.cursor()
-
-    query = """
-        SELECT * FROM Users
-        WHERE username = ?
-        AND password = '""" + data.password + "'"
-
+    query = "SELECT * FROM Users WHERE username = ? AND password = '" + data.password + "'"
     print("PARTIAL QUERY:", query)
-
     try:
         cursor.execute(query, (data.username,))
         rows = cursor.fetchall()
-        return {
-            "variant": "partial",
-            "status": "success" if rows else "failed",
-            "rows_returned": len(rows)
-        }
+        return {"variant": "partial", "status": "success" if rows else "failed", "rows": len(rows)}
     except Exception:
         return {"variant": "partial", "status": "error"}
     finally:
@@ -74,23 +55,58 @@ def login_partial(data: LoginRequest):
 def login_secure(data: LoginRequest):
     conn = get_connection()
     cursor = conn.cursor()
-
-    query = """
-        SELECT * FROM Users
-        WHERE username = ?
-        AND password = ?
-    """
-
+    query = "SELECT * FROM Users WHERE username = ? AND password = ?"
     print("SECURE QUERY: Prepared Statement Used")
-
     try:
         cursor.execute(query, (data.username, data.password))
         rows = cursor.fetchall()
-        return {
-            "variant": "secure",
-            "status": "success" if rows else "failed",
-            "rows_returned": len(rows)
-        }
+        return {"variant": "secure", "status": "success" if rows else "failed", "rows": len(rows)}
+    except Exception:
+        return {"variant": "secure", "status": "error"}
+    finally:
+        conn.close()
+
+@app.post("/search-insecure")
+def search_insecure(data: SearchRequest):
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = f"SELECT id, username, role FROM Users WHERE username LIKE '%{data.query}%'"
+    print("INSECURE SEARCH QUERY:", query)
+    try:
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        return {"variant": "insecure", "results": len(rows)}
+    except Exception:
+        return {"variant": "insecure", "status": "error"}
+    finally:
+        conn.close()
+
+@app.post("/search-partial")
+def search_partial(data: SearchRequest):
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = "SELECT id, username, role FROM Users WHERE username LIKE '%" + data.query + "%'"
+    print("PARTIAL SEARCH QUERY:", query)
+    try:
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        return {"variant": "partial", "results": len(rows)}
+    except Exception:
+        return {"variant": "partial", "status": "error"}
+    finally:
+        conn.close()
+
+
+@app.post("/search-secure")
+def search_secure(data: SearchRequest):
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = "SELECT id, username, role FROM Users WHERE username LIKE ?"
+    print("SECURE SEARCH QUERY: Prepared Statement Used")
+    try:
+        cursor.execute(query, (f"%{data.query}%",))
+        rows = cursor.fetchall()
+        return {"variant": "secure", "results": len(rows)}
     except Exception:
         return {"variant": "secure", "status": "error"}
     finally:
