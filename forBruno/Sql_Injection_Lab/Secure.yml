@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://127.0.0.1:8000/login-secure?password
+  url: http://127.0.0.1:8010/login-secure?password
   params:
     - name: password
       value: ""

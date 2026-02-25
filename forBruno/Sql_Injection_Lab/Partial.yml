@@ -5,11 +5,7 @@ info:
 
 http:
   method: GET
-  url: http://127.0.0.1:8000/login-partial
-  params:
-    - name: ""
-      value: ""
-      type: query
+  url: http://127.0.0.1:8010/login-partial
   auth: inherit
 
 settings:
