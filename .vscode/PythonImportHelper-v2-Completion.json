@@ -1,0 +1,73 @@
+[
+    {
+        "label": "FastAPI",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "pyodbc",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pyodbc",
+        "description": "pyodbc",
+        "detail": "pyodbc",
+        "documentation": {}
+    },
+    {
+        "label": "get_connection",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def get_connection():\n    return pyodbc.connect(conn_str)\n@app.get(\"/login-insecure\")\ndef login_insecure(username: str, password: str):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = f\"SELECT * FROM Users WHERE username = '{username}' AND password = '{password}'\"\n    print(\"INSECURE QUERY:\", query)\n    try:\n        cursor.execute(query)",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "login_insecure",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def login_insecure(username: str, password: str):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = f\"SELECT * FROM Users WHERE username = '{username}' AND password = '{password}'\"\n    print(\"INSECURE QUERY:\", query)\n    try:\n        cursor.execute(query)\n        rows = cursor.fetchall()\n        return {\"status\": \"success\" if rows else \"failed\", \"rows\": len(rows)}\n    except Exception as e:",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "login_partial",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def login_partial(username: str, password: str):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = \"SELECT * FROM Users WHERE username = ? AND password = '\" + password + \"'\"\n    print(\"PARTIAL QUERY:\", query)\n    try:\n        cursor.execute(query, (username,))\n        rows = cursor.fetchall()\n        return {\"status\": \"success\" if rows else \"failed\", \"rows\": len(rows)}\n    except Exception as e:",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "login_secure",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def login_secure(username: str, password: str):\n    conn = get_connection()\n    cursor = conn.cursor()\n    query = \"SELECT * FROM Users WHERE username = ? AND password = ?\"\n    print(\"SECURE QUERY: Prepared Statement Used\")\n    try:\n        cursor.execute(query, (username, password))\n        rows = cursor.fetchall()\n        return {\"status\": \"success\" if rows else \"failed\", \"rows\": len(rows)}\n    except Exception as e:",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "app",
+        "kind": 5,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "app = FastAPI()\nconn_str = (\n    \"DRIVER={ODBC Driver 17 for SQL Server};\"\n    \"SERVER=(localdb)\\MSSQLLocalDB;\"\n    \"DATABASE=SqlInjectionLab;\"\n    \"Trusted_Connection=yes;\"\n)\ndef get_connection():\n    return pyodbc.connect(conn_str)\n@app.get(\"/login-insecure\")",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "conn_str",
+        "kind": 5,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "conn_str = (\n    \"DRIVER={ODBC Driver 17 for SQL Server};\"\n    \"SERVER=(localdb)\\MSSQLLocalDB;\"\n    \"DATABASE=SqlInjectionLab;\"\n    \"Trusted_Connection=yes;\"\n)\ndef get_connection():\n    return pyodbc.connect(conn_str)\n@app.get(\"/login-insecure\")\ndef login_insecure(username: str, password: str):",
+        "detail": "main",
+        "documentation": {}
+    }
+]
