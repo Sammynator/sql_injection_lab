@@ -1,16 +1,16 @@
 info:
-  name: Insecure
+  name: Login_Partial
   type: http
-  seq: 1
+  seq: 3
 
 http:
   method: POST
-  url: http://127.0.0.1:8010/login-insecure
+  url: http://127.0.0.1:8010/login-partial
   body:
     type: json
     data: |-
       {
-        "username":  "admin",
+        "username": "admin",
         "password": "admin123"
       }
   auth: inherit

@@ -1,17 +1,16 @@
 info:
-  name: Secure
+  name: Search_Partial
   type: http
-  seq: 4
+  seq: 6
 
 http:
   method: POST
-  url: http://127.0.0.1:8010/login-secure
+  url: http://127.0.0.1:8010/search-partial
   body:
     type: json
     data: |-
       {
-        "username": "admin",
-        "password": "admin123"
+        "query": "' OR 1=1--"
       }
   auth: inherit
 
